@@ -1,49 +1,28 @@
 .game-screen {
   min-height: 100vh;
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  display: flex;
+}
+
+.main-container {
+  margin-left: 280px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
 
 .game-header {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-  padding: 1rem 2rem;
+  padding: 1.5rem 2rem;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.header-content {
-  max-width: 1400px;
-  margin: 0 auto;
 }
 
 .header-title {
   font-size: 2.5rem;
-  margin: 0 0 1rem 0;
+  margin: 0;
   text-align: center;
-}
-
-.learner-info {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 1.5rem;
-}
-
-.info-item {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: rgba(255, 255, 255, 0.2);
-  padding: 0.5rem 1rem;
-  border-radius: 20px;
-}
-
-.info-item .label {
-  font-weight: bold;
-  opacity: 0.9;
-}
-
-.info-item .value {
-  font-weight: bold;
 }
 
 .game-nav {
@@ -91,7 +70,9 @@
 }
 
 .game-content {
+  flex: 1;
   max-width: 1400px;
   margin: 0 auto;
   padding: 2rem;
+  width: 100%;
 }
