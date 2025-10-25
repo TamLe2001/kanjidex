@@ -19,6 +19,9 @@ export default function Team() {
   const playKanjiSound = (kanjiId: string) => {
     const reading = getCorrectReading(kanjiId);
     if (reading && 'speechSynthesis' in window) {
+      // Cancel any currently playing speech to prevent queuing
+      speechSynthesis.cancel();
+      
       const utterance = new SpeechSynthesisUtterance(reading);
       utterance.lang = 'ja-JP';
       utterance.rate = 0.8;
@@ -52,55 +55,23 @@ export default function Team() {
             <p className="kanji-level">Level {gameState.learner.partner.level}</p>
             <p className="kanji-type">Type: {gameState.learner.partner.type}</p>
             
-            <div className="exp-bar-container">
-              <div className="exp-label">EXP</div>
-              <div className="exp-bar-bg">
-                <div 
-                  className="exp-bar" 
-                  style={{ width: `${(gameState.learner.partner.currentExp / gameState.learner.partner.expToNextLevel) * 100}%` }}
-                />
+            <div className="stats-grid-compact">
+              <div className="stat-item-compact">
+                <span className="stat-label">HP</span>
+                <span className="stat-value">{gameState.learner.partner.currentHp}/{gameState.learner.partner.maxHp}</span>
               </div>
-              <div className="exp-text">
-                {gameState.learner.partner.currentExp}/{gameState.learner.partner.expToNextLevel}
-              </div>
-            </div>
-
-            <div className="hp-section">
-              <div className="hp-label">HP</div>
-              <div className="hp-bar-bg">
-                <div 
-                  className="hp-bar-fill" 
-                  style={{ width: `${(gameState.learner.partner.currentHp / gameState.learner.partner.maxHp) * 100}%` }}
-                />
-              </div>
-              <div className="hp-value">
-                {gameState.learner.partner.currentHp}/{gameState.learner.partner.maxHp}
-              </div>
-            </div>
-
-            <div className="stats-grid">
-              <div className="stat-item">
+              <div className="stat-item-compact">
                 <span className="stat-label">ATK</span>
                 <span className="stat-value">{gameState.learner.partner.attack}</span>
               </div>
-              <div className="stat-item">
+              <div className="stat-item-compact">
                 <span className="stat-label">DEF</span>
                 <span className="stat-value">{gameState.learner.partner.defense}</span>
               </div>
-              <div className="stat-item">
+              <div className="stat-item-compact">
                 <span className="stat-label">SPD</span>
                 <span className="stat-value">{gameState.learner.partner.speed}</span>
               </div>
-            </div>
-
-            <div className="moves-section">
-              <p className="moves-header">Moves:</p>
-              {gameState.learner.partner.moves.map(move => (
-                <div key={move.id} className="move-row">
-                  <span className="move-name">{move.name}</span>
-                  <span className="move-power">⚡{move.power}</span>
-                </div>
-              ))}
             </div>
           </div>
         </div>

@@ -19,11 +19,16 @@
 }
 
 .team h4 {
-  font-size: 1.5rem;
+  font-size: 1.1rem;
   text-align: center;
   color: #333;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.3rem;
   font-weight: 600;
+}
+
+.current-partner-card h4 {
+  font-size: 1.1rem;
+  margin-bottom: 0.3rem;
 }
 
 .switch-instruction {
@@ -226,13 +231,13 @@
 }
 
 .current-partner-section {
-  margin-bottom: 3rem;
+  margin-bottom: 2rem;
 }
 
 .current-partner-section h3 {
-  font-size: 1.5rem;
+  font-size: 1.3rem;
   text-align: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
   color: #51cf66;
   font-weight: 600;
 }
@@ -240,18 +245,18 @@
 .current-partner-card {
   background: linear-gradient(135deg, rgba(81, 207, 102, 0.1) 0%, rgba(55, 178, 77, 0.1) 100%);
   border: 2px solid #51cf66;
-  border-radius: 15px;
-  padding: 2rem;
-  box-shadow: 0 4px 15px rgba(81, 207, 102, 0.2);
-  max-width: 500px;
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 2px 8px rgba(81, 207, 102, 0.2);
+  max-width: 280px;
   margin: 0 auto;
 }
 
 .kanji-display-large {
-  font-size: 6rem;
+  font-size: 3.5rem;
   text-align: center;
-  margin: 1rem 0;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin: 0.5rem 0;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .team-kanji-card h3 {
@@ -390,4 +395,33 @@
   font-weight: bold;
   color: #333;
   margin: 0.5rem 0;
+}
+
+.current-partner-card .stats-grid-compact {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: #f5f5f5;
+  border-radius: 8px;
+  margin-top: 0.5rem;
+}
+
+.current-partner-card .stat-item-compact {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+.current-partner-card .stat-item-compact .stat-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #666;
+}
+
+.current-partner-card .stat-item-compact .stat-value {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #333;
 }

@@ -14,6 +14,9 @@ interface AreaExplorerProps {
 const playKanjiSound = (kanjiId: string) => {
   const reading = getCorrectReading(kanjiId);
   if (reading && 'speechSynthesis' in window) {
+    // Cancel any currently playing speech to prevent queuing
+    speechSynthesis.cancel();
+    
     const utterance = new SpeechSynthesisUtterance(reading);
     utterance.lang = 'ja-JP';
     utterance.rate = 0.8;

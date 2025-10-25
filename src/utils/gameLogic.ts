@@ -5,18 +5,19 @@ export function calculateDamage(
   defender: KanjiCharacter,
   move: AttackMove
 ): number {
-  // Basic damage calculation
+  // Basic damage calculation with significantly reduced power for longer battles
   const attackPower = attacker.attack;
   const defense = defender.defense;
   const movePower = move.power;
   
   // Type effectiveness (simplified - same type bonus)
-  const typeBonus = attacker.type === move.type ? 1.5 : 1.0;
+  const typeBonus = attacker.type === move.type ? 1.2 : 1.0;
   
   // Random factor (0.85 to 1.0)
   const randomFactor = 0.85 + Math.random() * 0.15;
   
-  const baseDamage = ((attackPower * movePower) / defense) * 0.5;
+  // Significantly reduced damage formula - battles should take 3-5 hits
+  const baseDamage = ((attackPower * movePower) / (defense * 4)) * 0.3;
   const finalDamage = Math.floor(baseDamage * typeBonus * randomFactor);
   
   return Math.max(1, finalDamage);
