@@ -6,10 +6,10 @@ import Team from './Team';
 import LearnerSidebar from './LearnerSidebar';
 import './GameScreen.css';
 
-type Screen = 'areas' | 'shop' | 'team';
+type Screen = 'areas' | 'battle' | 'shop' | 'kanji';
 
 export default function GameScreen() {
-  const { gameState, healAllTeam, unlockAreas } = useGame();
+  const { gameState, unlockAreas } = useGame();
   const [currentScreen, setCurrentScreen] = useState<Screen>('areas');
 
   useEffect(() => {
@@ -34,10 +34,16 @@ export default function GameScreen() {
             🗾 Areas
           </button>
           <button
-            className={`nav-button ${currentScreen === 'team' ? 'active' : ''}`}
-            onClick={() => setCurrentScreen('team')}
+            className={`nav-button ${currentScreen === 'battle' ? 'active' : ''}`}
+            onClick={() => setCurrentScreen('battle')}
           >
-            👥 Team ({gameState.learner.team.length}/6)
+            ⚔️ Battle
+          </button>
+          <button
+            className={`nav-button ${currentScreen === 'kanji' ? 'active' : ''}`}
+            onClick={() => setCurrentScreen('kanji')}
+          >
+            📖 Kanji
           </button>
           <button
             className={`nav-button ${currentScreen === 'shop' ? 'active' : ''}`}
@@ -45,17 +51,12 @@ export default function GameScreen() {
           >
             🏪 Shop
           </button>
-          <button
-            className="nav-button heal-button"
-            onClick={healAllTeam}
-          >
-            ❤️ Heal All
-          </button>
         </nav>
 
         <main className="game-content">
-          {currentScreen === 'areas' && <AreaExplorer />}
-          {currentScreen === 'team' && <Team />}
+          {currentScreen === 'areas' && <AreaExplorer mode="explore" />}
+          {currentScreen === 'battle' && <AreaExplorer mode="battle" />}
+          {currentScreen === 'kanji' && <Team />}
           {currentScreen === 'shop' && <Shop />}
         </main>
       </div>

@@ -50,9 +50,11 @@ export default function LearnerSidebar() {
             <span className="detail-value">{gameState.learner.inventory.potions}</span>
           </div>
           
-          <div className="detail-item team">
-            <span className="detail-label">👥 Team Size</span>
-            <span className="detail-value">{gameState.learner.team.length} / 6</span>
+          <div className="detail-item partner">
+            <span className="detail-label">⭐ Partner</span>
+            <span className="detail-value">
+              {gameState.learner.partner ? gameState.learner.partner.character : 'None'}
+            </span>
           </div>
           
           <div className="detail-item caught">

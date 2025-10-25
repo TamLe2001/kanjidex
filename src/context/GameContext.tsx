@@ -14,7 +14,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       currentExp: 0,
       expToNextLevel: 100,
       currency: 500,
-      team: [],
+      partner: null, // Single partner instead of team
       inventory: {
         ziScrolls: 5,
         potions: 3
@@ -33,7 +33,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       learner: {
         ...prev.learner,
         name: learnerName,
-        team: [starterKanji],
+        partner: starterKanji, // Set as partner
         caughtKanji: [starterKanji]
       },
       hasStarted: true
@@ -47,19 +47,14 @@ export function GameProvider({ children }: { children: ReactNode }) {
     }));
   };
 
-  const addToTeam = (kanji: KanjiCharacter) => {
-    setGameState(prev => {
-      if (prev.learner.team.length >= 6) {
-        return prev;
+  const setPartner = (kanji: KanjiCharacter) => {
+    setGameState(prev => ({
+      ...prev,
+      learner: {
+        ...prev.learner,
+        partner: kanji
       }
-      return {
-        ...prev,
-        learner: {
-          ...prev.learner,
-          team: [...prev.learner.team, kanji]
-        }
-      };
-    });
+    }));
   };
 
   const addToCaughtKanji = (kanji: KanjiCharacter) => {
@@ -116,12 +111,12 @@ export function GameProvider({ children }: { children: ReactNode }) {
     });
   };
 
-  const healAllTeam = () => {
+  const healPartner = () => {
     setGameState(prev => ({
       ...prev,
       learner: {
         ...prev.learner,
-        team: prev.learner.team.map(kanji => fullHealKanji(kanji))
+        partner: prev.learner.partner ? fullHealKanji(prev.learner.partner) : null
       }
     }));
   };
@@ -145,11 +140,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
     });
   };
 
-  const updateTeamKanji = (index: number, kanji: KanjiCharacter) => {
+  const updatePartner = (kanji: KanjiCharacter) => {
     setGameState(prev => {
-      const updatedTeam = [...prev.learner.team];
-      updatedTeam[index] = kanji;
-      
       // Also update in caughtKanji
       const caughtIndex = prev.learner.caughtKanji.findIndex(k => k.id === kanji.id);
       const updatedCaught = [...prev.learner.caughtKanji];
@@ -161,7 +153,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
         ...prev,
         learner: {
           ...prev.learner,
-          team: updatedTeam,
+          partner: kanji,
           caughtKanji: updatedCaught
         }
       };
@@ -174,14 +166,14 @@ export function GameProvider({ children }: { children: ReactNode }) {
         gameState, 
         startGame, 
         updateLearner, 
-        addToTeam, 
+        setPartner, 
         addToCaughtKanji,
         purchaseItem,
         selectArea,
         unlockAreas,
-        healAllTeam,
+        healPartner,
         gainLearnerExp,
-        updateTeamKanji
+        updatePartner
       }}
     >
       {children}
