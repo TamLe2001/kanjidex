@@ -1,8 +1,13 @@
+import { useState } from 'react';
 import { useGame } from '../hooks/useGame';
+import type { KanjiType } from '../types';
+import { getCorrectReading } from '../data/hiraganaReadings';
 import './Team.css';
 
 export default function Team() {
   const { gameState, setPartner } = useGame();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [typeFilter, setTypeFilter] = useState<KanjiType | 'All'>('All');
 
   const handleSetPartner = (kanjiId: string) => {
     const kanji = gameState.learner.caughtKanji.find(k => k.id === kanjiId);
@@ -10,6 +15,29 @@ export default function Team() {
       setPartner(kanji);
     }
   };
+
+  const playKanjiSound = (kanjiId: string) => {
+    const reading = getCorrectReading(kanjiId);
+    if (reading && 'speechSynthesis' in window) {
+      const utterance = new SpeechSynthesisUtterance(reading);
+      utterance.lang = 'ja-JP';
+      utterance.rate = 0.8;
+      speechSynthesis.speak(utterance);
+    }
+  };
+
+  // Filter kanji based on search term and type filter
+  const filteredKanji = gameState.learner.caughtKanji.filter(kanji => {
+    const matchesSearch = searchTerm === '' || 
+      kanji.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      kanji.character.includes(searchTerm);
+    const matchesType = typeFilter === 'All' || kanji.type === typeFilter;
+    return matchesSearch && matchesType;
+  });
+
+  // Get unique types from caught kanji
+  const availableTypes: (KanjiType | 'All')[] = ['All', ...Array.from(new Set(gameState.learner.caughtKanji.map(k => k.type)))];
+
 
   return (
     <div className="team">
@@ -86,72 +114,73 @@ export default function Team() {
       ) : (
         <>
           <h3>All Caught Kanji ({gameState.learner.caughtKanji.length})</h3>
-          <p className="switch-instruction">Click on a Kanji to set it as your partner</p>
+          
+          <div className="kanji-controls">
+            <div className="search-box">
+              <input
+                type="text"
+                placeholder="Search kanji..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="search-input"
+              />
+            </div>
+            <div className="filter-box">
+              <label htmlFor="type-filter">Type: </label>
+              <select
+                id="type-filter"
+                value={typeFilter}
+                onChange={(e) => setTypeFilter(e.target.value as KanjiType | 'All')}
+                className="type-filter"
+              >
+                {availableTypes.map(type => (
+                  <option key={type} value={type}>{type}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <p className="switch-instruction">Click on a Kanji to set it as your partner • Click 🔊 to hear pronunciation</p>
           
           <div className="team-grid">
-            {gameState.learner.caughtKanji.map((kanji) => (
+            {filteredKanji.map((kanji) => (
               <div 
                 key={kanji.id} 
                 className={`team-kanji-card ${gameState.learner.partner?.id === kanji.id ? 'is-partner' : ''}`}
-                onClick={() => handleSetPartner(kanji.id)}
               >
                 {gameState.learner.partner?.id === kanji.id && (
                   <div className="partner-badge">★ Partner</div>
                 )}
-                <div className="kanji-display-large">{kanji.character}</div>
-                <h4>{kanji.name}</h4>
-                <p className="kanji-level">Level {kanji.level}</p>
-                <p className="kanji-type">Type: {kanji.type}</p>
-                
-                <div className="exp-bar-container">
-                  <div className="exp-label">EXP</div>
-                  <div className="exp-bar-bg">
-                    <div 
-                      className="exp-bar" 
-                      style={{ width: `${(kanji.currentExp / kanji.expToNextLevel) * 100}%` }}
-                    />
-                  </div>
-                  <div className="exp-text">
-                    {kanji.currentExp}/{kanji.expToNextLevel}
-                  </div>
-                </div>
-
-                <div className="hp-section">
-                  <div className="hp-label">HP</div>
-                  <div className="hp-bar-bg">
-                    <div 
-                      className="hp-bar-fill" 
-                      style={{ width: `${(kanji.currentHp / kanji.maxHp) * 100}%` }}
-                    />
-                  </div>
-                  <div className="hp-value">
-                    {kanji.currentHp}/{kanji.maxHp}
-                  </div>
-                </div>
-
-                <div className="stats-grid">
-                  <div className="stat-item">
-                    <span className="stat-label">ATK</span>
-                    <span className="stat-value">{kanji.attack}</span>
-                  </div>
-                  <div className="stat-item">
-                    <span className="stat-label">DEF</span>
-                    <span className="stat-value">{kanji.defense}</span>
-                  </div>
-                  <div className="stat-item">
-                    <span className="stat-label">SPD</span>
-                    <span className="stat-value">{kanji.speed}</span>
-                  </div>
-                </div>
-
-                <div className="moves-section">
-                  <p className="moves-header">Moves:</p>
-                  {kanji.moves.map(move => (
-                    <div key={move.id} className="move-row">
-                      <span className="move-name">{move.name}</span>
-                      <span className="move-power">⚡{move.power}</span>
+                <button 
+                  className="sound-button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    playKanjiSound(kanji.id);
+                  }}
+                  title="Play pronunciation"
+                >
+                  🔊
+                </button>
+                <div onClick={() => handleSetPartner(kanji.id)}>
+                  <div className="kanji-display">{kanji.character}</div>
+                  <h4>{kanji.name}</h4>
+                  <p className="kanji-level">Level {kanji.level}</p>
+                  <p className="kanji-type">Type: {kanji.type}</p>
+                  
+                  <div className="stats-grid-compact">
+                    <div className="stat-item-compact">
+                      <span className="stat-label">ATK</span>
+                      <span className="stat-value">{kanji.attack}</span>
                     </div>
-                  ))}
+                    <div className="stat-item-compact">
+                      <span className="stat-label">DEF</span>
+                      <span className="stat-value">{kanji.defense}</span>
+                    </div>
+                    <div className="stat-item-compact">
+                      <span className="stat-label">SPD</span>
+                      <span className="stat-value">{kanji.speed}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             ))}
