@@ -9,7 +9,7 @@ function createKanji(
   type: KanjiCharacter['type'],
   baseStats: { hp: number; attack: number; defense: number; speed: number }
 ): KanjiCharacter {
-  const moves = getAttackMovesByType(type).slice(0, 4);
+  const moves = getAttackMovesByType(type).slice(0, 3); // Max 3 moves
   
   return {
     id,

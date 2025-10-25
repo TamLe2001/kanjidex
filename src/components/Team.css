@@ -7,6 +7,31 @@
   text-align: center;
   margin-bottom: 2rem;
   color: #333;
+  font-weight: 600;
+}
+
+.team h3 {
+  font-size: 1.8rem;
+  text-align: center;
+  margin: 2rem 0 1rem;
+  color: #667eea;
+  font-weight: 600;
+}
+
+.team h4 {
+  font-size: 1.5rem;
+  text-align: center;
+  color: #333;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.switch-instruction {
+  text-align: center;
+  color: #666;
+  margin-bottom: 1.5rem;
+  font-size: 0.95rem;
+  font-weight: 400;
 }
 
 .empty-team {
@@ -36,11 +61,52 @@
   padding: 1.5rem;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
 }
 
 .team-kanji-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+}
+
+.team-kanji-card.is-partner {
+  border: 3px solid #51cf66;
+  box-shadow: 0 4px 15px rgba(81, 207, 102, 0.3);
+}
+
+.partner-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: linear-gradient(135deg, #51cf66 0%, #37b24d 100%);
+  color: white;
+  padding: 0.4rem 0.8rem;
+  border-radius: 15px;
+  font-weight: 500;
+  font-size: 0.85rem;
+}
+
+.current-partner-section {
+  margin-bottom: 3rem;
+}
+
+.current-partner-section h3 {
+  font-size: 1.5rem;
+  text-align: center;
+  margin-bottom: 1.5rem;
+  color: #51cf66;
+  font-weight: 600;
+}
+
+.current-partner-card {
+  background: linear-gradient(135deg, rgba(81, 207, 102, 0.1) 0%, rgba(55, 178, 77, 0.1) 100%);
+  border: 2px solid #51cf66;
+  border-radius: 15px;
+  padding: 2rem;
+  box-shadow: 0 4px 15px rgba(81, 207, 102, 0.2);
+  max-width: 500px;
+  margin: 0 auto;
 }
 
 .kanji-display-large {
@@ -60,7 +126,7 @@
 .kanji-level {
   text-align: center;
   font-size: 1.1rem;
-  font-weight: bold;
+  font-weight: 500;
   color: #667eea;
   margin-bottom: 0.5rem;
 }
@@ -70,6 +136,7 @@
   font-size: 1rem;
   color: #764ba2;
   margin-bottom: 1rem;
+  font-weight: 400;
 }
 
 .exp-bar-container,
@@ -80,7 +147,7 @@
 .exp-label,
 .hp-label {
   font-size: 0.9rem;
-  font-weight: bold;
+  font-weight: 500;
   color: #333;
   margin-bottom: 0.25rem;
 }
@@ -132,13 +199,13 @@
 
 .stat-label {
   font-size: 0.85rem;
-  font-weight: bold;
+  font-weight: 500;
   color: #666;
 }
 
 .stat-value {
   font-size: 1.2rem;
-  font-weight: bold;
+  font-weight: 600;
   color: #333;
 }
 
@@ -148,7 +215,7 @@
 }
 
 .moves-header {
-  font-weight: bold;
+  font-weight: 500;
   margin-bottom: 0.5rem;
   color: #333;
 }
@@ -163,12 +230,12 @@
 }
 
 .move-name {
-  font-weight: 500;
+  font-weight: 400;
   color: #333;
 }
 
 .move-power {
-  font-weight: bold;
+  font-weight: 500;
   color: #667eea;
 }
 

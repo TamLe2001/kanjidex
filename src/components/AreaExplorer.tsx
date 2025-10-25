@@ -2,36 +2,51 @@ import { useState } from 'react';
 import { useGame } from '../hooks/useGame';
 import { getKanjiById } from '../data/kanjiCharacters';
 import { getRandomWildKanji, calculateDamage, isFainted, attemptCapture, gainExp } from '../utils/gameLogic';
+import { getQuizOptions, getCorrectReading } from '../data/hiraganaReadings';
 import type { KanjiCharacter } from '../types';
 import './AreaExplorer.css';
 
-export default function AreaExplorer() {
-  const { gameState, selectArea, addToCaughtKanji, addToTeam, updateLearner, gainLearnerExp, updateTeamKanji } = useGame();
+interface AreaExplorerProps {
+  mode: 'explore' | 'battle';
+}
+
+export default function AreaExplorer({ mode }: AreaExplorerProps) {
+  const { gameState, selectArea, addToCaughtKanji, updateLearner, gainLearnerExp, updatePartner, healPartner } = useGame();
   const [wildKanji, setWildKanji] = useState<KanjiCharacter | null>(null);
   const [battleLog, setBattleLog] = useState<string[]>([]);
   const [isPlayerTurn, setIsPlayerTurn] = useState(true);
   const [battleResult, setBattleResult] = useState<'ongoing' | 'won' | 'lost' | 'captured'>('ongoing');
+  const [selectedLevel, setSelectedLevel] = useState(1);
+  const [showQuiz, setShowQuiz] = useState(false);
+  const [quizOptions, setQuizOptions] = useState<string[]>([]);
+  const [capturedKanji, setCapturedKanji] = useState<KanjiCharacter | null>(null);
 
   const handleExploreArea = (areaId: string) => {
     const area = gameState.areas.find(a => a.id === areaId);
     if (!area || !area.isUnlocked) return;
+    selectArea(area);
+  };
+
+  const handleStartBattle = (areaId: string) => {
+    const area = gameState.areas.find(a => a.id === areaId);
+    if (!area || !area.isUnlocked || !gameState.learner.partner) return;
 
     selectArea(area);
 
     // Get random wild Kanji
     const wildKanjiIds = area.wildKanji.map(id => getKanjiById(id)).filter(k => k !== undefined) as KanjiCharacter[];
-    const wild = getRandomWildKanji(wildKanjiIds, gameState.learner.level);
+    const wild = getRandomWildKanji(wildKanjiIds, selectedLevel);
     
     setWildKanji(wild);
-    setBattleLog([`A wild ${wild.name} appeared!`]);
+    setBattleLog([`A wild Kanji appeared!`]); // Don't show name
     setIsPlayerTurn(true);
     setBattleResult('ongoing');
   };
 
   const handleAttack = (moveIndex: number) => {
-    if (!wildKanji || !isPlayerTurn || gameState.learner.team.length === 0) return;
+    if (!wildKanji || !isPlayerTurn || !gameState.learner.partner) return;
 
-    const playerKanji = gameState.learner.team[0];
+    const playerKanji = gameState.learner.partner;
     const move = playerKanji.moves[moveIndex];
     
     if (!move) return;
@@ -53,7 +68,7 @@ export default function AreaExplorer() {
       const currencyGained = Math.floor(updatedWild.level * 15);
       
       const updatedPlayerKanji = gainExp(playerKanji, expGained);
-      updateTeamKanji(0, updatedPlayerKanji);
+      updatePartner(updatedPlayerKanji);
       
       updateLearner({
         currency: gameState.learner.currency + currencyGained
@@ -63,11 +78,16 @@ export default function AreaExplorer() {
       
       setBattleLog([
         ...newLog,
-        `Wild ${updatedWild.name} fainted!`,
+        `Wild Kanji fainted!`,
         `${playerKanji.name} gained ${expGained} EXP!`,
         `You earned ${currencyGained} currency!`
       ]);
       setBattleResult('won');
+      
+      // Auto-heal partner after battle
+      setTimeout(() => {
+        healPartner();
+      }, 1000);
       return;
     }
 
@@ -79,7 +99,9 @@ export default function AreaExplorer() {
   };
 
   const enemyAttack = (currentWild: KanjiCharacter, currentLog: string[]) => {
-    const playerKanji = gameState.learner.team[0];
+    if (!gameState.learner.partner) return;
+    
+    const playerKanji = gameState.learner.partner;
     const enemyMove = currentWild.moves[Math.floor(Math.random() * currentWild.moves.length)];
     
     const damage = calculateDamage(currentWild, playerKanji, enemyMove);
@@ -88,14 +110,19 @@ export default function AreaExplorer() {
       currentHp: Math.max(0, playerKanji.currentHp - damage) 
     };
     
-    updateTeamKanji(0, updatedPlayer);
+    updatePartner(updatedPlayer);
     
-    const newLog = [...currentLog, `${currentWild.name} used ${enemyMove.name}! Dealt ${damage} damage.`];
+    const newLog = [...currentLog, `Wild Kanji used ${enemyMove.name}! Dealt ${damage} damage.`];
     setBattleLog(newLog);
 
     if (isFainted(updatedPlayer)) {
       setBattleLog([...newLog, `${playerKanji.name} fainted! You lost the battle.`]);
       setBattleResult('lost');
+      
+      // Auto-heal partner after battle
+      setTimeout(() => {
+        healPartner();
+      }, 1000);
       return;
     }
 
@@ -116,30 +143,63 @@ export default function AreaExplorer() {
     
     if (captured) {
       const caughtKanji = { ...wildKanji, currentHp: wildKanji.maxHp };
-      addToCaughtKanji(caughtKanji);
+      setCapturedKanji(caughtKanji);
       
-      if (gameState.learner.team.length < 6) {
-        addToTeam(caughtKanji);
-      }
+      // Show quiz to identify the kanji
+      const options = getQuizOptions(wildKanji.id);
+      setQuizOptions(options);
+      setShowQuiz(true);
       
       setBattleLog([
         ...battleLog,
         `You used a ZiScroll!`,
-        `Success! ${wildKanji.name} was captured!`
+        `Success! The Kanji was captured!`,
+        `Now identify the Kanji to add it to your collection!`
       ]);
-      setBattleResult('captured');
     } else {
       setBattleLog([
         ...battleLog,
         `You used a ZiScroll!`,
-        `${wildKanji.name} broke free!`
+        `The Kanji broke free!`
       ]);
       
       // Enemy's turn after failed capture
       setIsPlayerTurn(false);
       setTimeout(() => {
-        enemyAttack(wildKanji, [...battleLog, `You used a ZiScroll!`, `${wildKanji.name} broke free!`]);
+        enemyAttack(wildKanji, [...battleLog, `You used a ZiScroll!`, `The Kanji broke free!`]);
       }, 1000);
+    }
+  };
+
+  const handleQuizAnswer = (selectedAnswer: string) => {
+    if (!capturedKanji) return;
+    
+    const correctAnswer = getCorrectReading(capturedKanji.id);
+    
+    if (selectedAnswer === correctAnswer) {
+      // Correct answer
+      addToCaughtKanji(capturedKanji);
+      
+      setBattleLog([
+        ...battleLog,
+        `Correct! ${capturedKanji.character} (${capturedKanji.name}) has been added to your collection!`
+      ]);
+      setBattleResult('captured');
+      setShowQuiz(false);
+      
+      // Auto-heal partner after battle
+      setTimeout(() => {
+        healPartner();
+      }, 1000);
+    } else {
+      // Wrong answer - kanji escapes
+      setBattleLog([
+        ...battleLog,
+        `Incorrect! The Kanji escaped!`
+      ]);
+      setShowQuiz(false);
+      setWildKanji(null);
+      setBattleResult('ongoing');
     }
   };
 
@@ -147,37 +207,27 @@ export default function AreaExplorer() {
     setWildKanji(null);
     setBattleLog([]);
     setBattleResult('ongoing');
+    setShowQuiz(false);
   };
 
   const handleNewBattle = () => {
     if (gameState.currentArea) {
-      handleExploreArea(gameState.currentArea.id);
+      handleStartBattle(gameState.currentArea.id);
     }
   };
 
-  if (wildKanji && gameState.learner.team.length > 0) {
-    const playerKanji = gameState.learner.team[0];
+  // Battle screen
+  if (wildKanji && gameState.learner.partner) {
+    const playerKanji = gameState.learner.partner;
     
     return (
       <div className="battle-screen">
         <h2 className="battle-title">Battle!</h2>
         
         <div className="battle-field">
-          <div className="kanji-container enemy">
-            <div className="kanji-info">
-              <h3>{wildKanji.name} (Lv. {wildKanji.level})</h3>
-              <div className="hp-bar-container">
-                <div 
-                  className="hp-bar" 
-                  style={{ width: `${(wildKanji.currentHp / wildKanji.maxHp) * 100}%` }}
-                />
-              </div>
-              <p className="hp-text">{wildKanji.currentHp}/{wildKanji.maxHp} HP</p>
-            </div>
-            <div className="kanji-sprite enemy-sprite">{wildKanji.character}</div>
-          </div>
-
+          {/* Player's Kanji on the LEFT */}
           <div className="kanji-container player">
+            <div className="player-indicator">Your Partner</div>
             <div className="kanji-sprite player-sprite">{playerKanji.character}</div>
             <div className="kanji-info">
               <h3>{playerKanji.name} (Lv. {playerKanji.level})</h3>
@@ -190,6 +240,21 @@ export default function AreaExplorer() {
               <p className="hp-text">{playerKanji.currentHp}/{playerKanji.maxHp} HP</p>
             </div>
           </div>
+
+          {/* Enemy Kanji on the RIGHT */}
+          <div className="kanji-container enemy">
+            <div className="kanji-info">
+              <h3>??? (Lv. {wildKanji.level})</h3>
+              <div className="hp-bar-container">
+                <div 
+                  className="hp-bar" 
+                  style={{ width: `${(wildKanji.currentHp / wildKanji.maxHp) * 100}%` }}
+                />
+              </div>
+              <p className="hp-text">{wildKanji.currentHp}/{wildKanji.maxHp} HP</p>
+            </div>
+            <div className="kanji-sprite enemy-sprite">{wildKanji.character}</div>
+          </div>
         </div>
 
         <div className="battle-log">
@@ -198,7 +263,28 @@ export default function AreaExplorer() {
           ))}
         </div>
 
-        {battleResult === 'ongoing' && isPlayerTurn && (
+        {showQuiz && capturedKanji && (
+          <div className="quiz-modal">
+            <div className="quiz-content">
+              <h3>Identify the Kanji!</h3>
+              <div className="quiz-kanji">{capturedKanji.character}</div>
+              <p>What is the reading of this kanji?</p>
+              <div className="quiz-options">
+                {quizOptions.map((option, index) => (
+                  <button
+                    key={index}
+                    className="quiz-option"
+                    onClick={() => handleQuizAnswer(option)}
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {battleResult === 'ongoing' && isPlayerTurn && !showQuiz && (
           <div className="battle-actions">
             <div className="moves-grid">
               {playerKanji.moves.map((move, index) => (
@@ -230,7 +316,7 @@ export default function AreaExplorer() {
           </div>
         )}
 
-        {battleResult !== 'ongoing' && (
+        {battleResult !== 'ongoing' && !showQuiz && (
           <div className="battle-result">
             <button className="new-battle-button" onClick={handleNewBattle}>
               New Battle
@@ -244,9 +330,69 @@ export default function AreaExplorer() {
     );
   }
 
+  // Area selection screen
+  if (mode === 'explore') {
+    return (
+      <div className="area-explorer">
+        <h2>Explore Japan</h2>
+        <p className="mode-description">Select an area to explore and learn about different regions.</p>
+        <div className="areas-grid">
+          {gameState.areas.map(area => (
+            <div
+              key={area.id}
+              className={`area-card ${area.isUnlocked ? 'unlocked' : 'locked'} ${gameState.currentArea?.id === area.id ? 'selected' : ''}`}
+            >
+              <h3>{area.name}</h3>
+              <p className="region">{area.region}</p>
+              <p className="description">{area.description}</p>
+              <p className="level-req">
+                Required Level: {area.requiredLevel}
+              </p>
+              {area.isUnlocked ? (
+                <button
+                  className="explore-button"
+                  onClick={() => handleExploreArea(area.id)}
+                >
+                  {gameState.currentArea?.id === area.id ? 'Selected' : 'Select'}
+                </button>
+              ) : (
+                <div className="locked-badge">🔒 Locked</div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // Battle mode
   return (
     <div className="area-explorer">
-      <h2>Explore Japan</h2>
+      <h2>Battle Arena</h2>
+      <p className="mode-description">Choose an area and level to battle wild Kanji!</p>
+      
+      {!gameState.learner.partner && (
+        <div className="no-partner-warning">
+          <p>⚠️ You need a partner to battle!</p>
+          <p>Select a Kanji from the Kanji tab first.</p>
+        </div>
+      )}
+
+      <div className="battle-settings">
+        <div className="level-selector">
+          <label htmlFor="level-select">Wild Kanji Level:</label>
+          <input
+            id="level-select"
+            type="range"
+            min="1"
+            max={gameState.learner.level}
+            value={selectedLevel}
+            onChange={(e) => setSelectedLevel(Number(e.target.value))}
+          />
+          <span className="level-value">Level {selectedLevel}</span>
+        </div>
+      </div>
+
       <div className="areas-grid">
         {gameState.areas.map(area => (
           <div
@@ -261,11 +407,11 @@ export default function AreaExplorer() {
             </p>
             {area.isUnlocked ? (
               <button
-                className="explore-button"
-                onClick={() => handleExploreArea(area.id)}
-                disabled={gameState.learner.team.length === 0}
+                className="explore-button battle-button"
+                onClick={() => handleStartBattle(area.id)}
+                disabled={!gameState.learner.partner}
               >
-                Explore
+                Start Battle
               </button>
             ) : (
               <div className="locked-badge">🔒 Locked</div>

@@ -64,7 +64,7 @@ export interface Learner {
   currentExp: number;
   expToNextLevel: number;
   currency: number;
-  team: KanjiCharacter[];
+  partner: KanjiCharacter | null; // Single partner instead of team
   inventory: {
     ziScrolls: number;
     potions: number;
