@@ -10,6 +10,20 @@ interface AreaExplorerProps {
   mode: 'explore' | 'battle';
 }
 
+// Helper function to play kanji pronunciation
+const playKanjiSound = (kanjiId: string) => {
+  const reading = getCorrectReading(kanjiId);
+  if (reading && 'speechSynthesis' in window) {
+    // Cancel any currently playing speech to prevent queuing
+    speechSynthesis.cancel();
+    
+    const utterance = new SpeechSynthesisUtterance(reading);
+    utterance.lang = 'ja-JP';
+    utterance.rate = 0.8;
+    speechSynthesis.speak(utterance);
+  }
+};
+
 export default function AreaExplorer({ mode }: AreaExplorerProps) {
   const { gameState, selectArea, addToCaughtKanji, updateLearner, gainLearnerExp, updatePartner, healPartner } = useGame();
   const [wildKanji, setWildKanji] = useState<KanjiCharacter | null>(null);
@@ -41,6 +55,9 @@ export default function AreaExplorer({ mode }: AreaExplorerProps) {
     setBattleLog([`A wild Kanji appeared!`]); // Don't show name
     setIsPlayerTurn(true);
     setBattleResult('ongoing');
+
+    // Play the wild kanji's pronunciation
+    playKanjiSound(wild.id);
   };
 
   const handleAttack = (moveIndex: number) => {
@@ -369,12 +386,26 @@ export default function AreaExplorer({ mode }: AreaExplorerProps) {
   return (
     <div className="area-explorer">
       <h2>Battle Arena</h2>
-      <p className="mode-description">Choose an area and level to battle wild Kanji!</p>
+      <p className="mode-description">Start a battle in your selected area!</p>
       
       {!gameState.learner.partner && (
         <div className="no-partner-warning">
           <p>⚠️ You need a partner to battle!</p>
           <p>Select a Kanji from the Kanji tab first.</p>
+        </div>
+      )}
+
+      {!gameState.currentArea && (
+        <div className="no-area-warning">
+          <p>⚠️ No area selected!</p>
+          <p>Go to the Areas tab and select an area first.</p>
+        </div>
+      )}
+
+      {gameState.currentArea && (
+        <div className="current-area-info">
+          <h3>Selected Area: {gameState.currentArea.name}</h3>
+          <p className="area-description">{gameState.currentArea.description}</p>
         </div>
       )}
 
@@ -393,31 +424,14 @@ export default function AreaExplorer({ mode }: AreaExplorerProps) {
         </div>
       </div>
 
-      <div className="areas-grid">
-        {gameState.areas.map(area => (
-          <div
-            key={area.id}
-            className={`area-card ${area.isUnlocked ? 'unlocked' : 'locked'}`}
-          >
-            <h3>{area.name}</h3>
-            <p className="region">{area.region}</p>
-            <p className="description">{area.description}</p>
-            <p className="level-req">
-              Required Level: {area.requiredLevel}
-            </p>
-            {area.isUnlocked ? (
-              <button
-                className="explore-button battle-button"
-                onClick={() => handleStartBattle(area.id)}
-                disabled={!gameState.learner.partner}
-              >
-                Start Battle
-              </button>
-            ) : (
-              <div className="locked-badge">🔒 Locked</div>
-            )}
-          </div>
-        ))}
+      <div className="battle-start-container">
+        <button
+          className="main-battle-button"
+          onClick={() => gameState.currentArea && handleStartBattle(gameState.currentArea.id)}
+          disabled={!gameState.learner.partner || !gameState.currentArea}
+        >
+          ⚔️ Start Battle
+        </button>
       </div>
     </div>
   );
